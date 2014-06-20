@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snake</title>
+<script type="text/javascript">
+
+window.addEventListener('load',eventWindowLoaded,false);
+
+var Debugger=function(){ };
+Debugger.log=function(message){
+	try{
+		console.log(message);
+	}
+	catch(exception){
+		return;
+	}
+}
+
+function eventWindowLoaded(){
+	canvasApp();
+}
+
+function canvasSupport(){
+	return true//!!document.createElement('testCanvas').getContext;
+}
+
+function canvasApp(){
+		var speedSelect=document.getElementById("speedSelect");
+		var begin=document.getElementById("begin");
+		var pause=document.getElementById("pause");
+		var goon;
+		var speed=0.1;
+		var segment=[{headX:100,headY:50,tailX:20,tailY:50,direction:"right",size:80}];
+		var food={foodX:-1,foodY:-1};
+		var place;
+		var clear;
+
+	if(!canvasSupport()){
+		return;
+	}
+	else
+		var theCanvas=document.getElementById("canvas");
+		var context=theCanvas.getContext("2d");
+		begin.addEventListener('click',initGame,false);
+		pause.addEventListener('click',pauseGame,false);
+		window.addEventListener('keydown',changeDirection,true);
+		speedSelect.addEventListener('change',speedChanged,false);
+
+	function speedChanged(){
+		speed=(speedSelect.options[speedSelect.selectedIndex].value-0)*0.1;
+	}
+
+	function pauseGame(){
+		clearInterval(clear);
+		pause.value="goon";
+		pause.id="goon";
+		goon=document.getElementById("goon");
+		goon.addEventListener('click',goonGame,false);		
+	}
+
+	function goonGame(){
+		goon.removeEventListener('click',goonGame,false);
+		goon.addEventListener('click',pauseGame,false);
+		goon.value="pause";
+		goon.id="pause";
+		clear=setInterval(drawScreen,10);
+	}
+
+	function gameOver(){
+		if(segment[0].headX<10||segment[0].headX>485||segment[0].headY<10||segment[0].headY>285){
+			clearInterval(clear);
+			alert("Game Over");
+		}
+		else
+			return;
+		}
+
+	function collide(){
+		if(segment.length>3){
+			for(var i=3;i<segment.length;i++){
+				if(((segment[0].headY==segment[i].headY)&&(segment[0].headX<segment[i].headX&&segment[0].headX>segment[i].tailX))				||((segment[0].headX==segment[i].headX)&&(segment[0].headY<segment[i].tailY&&segment[0].headY>segment[i].headY))){
+				  		clearInterval(clear);
+						alert("Game Over");
+				}
+				else{
+					if(i==segment.length-1){
+						return;
+					}
+					else
+						continue;
+				}
+			}
+		}
+		else
+			return;
+	}
+
+	function changeDirection(e){
+		if(((segment[0].direction=="left"||segment[0].direction=="right")&&(e.keyCode!=37&&e.keyCode!=39))||
+		((segment[0].direction=="up"||segment[0].direction=="down")&&(e.keyCode!=38||e.keyCode!=40))){
+		segment.length+=1;
+		for(var i=segment.length-1;i>0;i--){
+			segment[i]={headX:0,headY:0,tailX:0,tailY:0,direction:""};
+			segment[i].headX=segment[i-1].headX;
+			segment[i].headY=segment[i-1].headY;
+			segment[i].tailX=segment[i-1].tailX;
+			segment[i].tailY=segment[i-1].tailY;
+			segment[i].direction=segment[i-1].direction; 
+		}
+		if(segment[0].direction=="left"||segment[0].direction=="right"){
+			if(e.keyCode==38){
+				segment[0].headY-=speed;
+				segment[0].tailX=segment[0].headX;
+				segment[0].direction="up";
+			}
+			else
+				if(e.keyCode==40){
+					segment[0].headY+=speed;
+					segment[0].tailX=segment[0].headX;
+					segment[0].direction="down";
+				}
+			else
+				return;
+		}
+		else{
+			if(segment[0].direction=="up"||segment[0].direction=="down"){
+				if(e.keyCode==37){
+					segment[0].headX-=speed;
+					segment[0].tailY=segment[0].headY;
+					segment[0].direction="left";
+				}
+				else
+					if(e.keyCode==39){
+						segment[0].headX+=speed;
+						segment[0].tailY=segment[0].headY;
+						segment[0].direction="right";
+					}
+				else
+					return;
+			}
+		}
+
+		}
+		else
+			return;
+
+	}
+
+	function eat(){
+		if((segment[0].headX<food.foodX+5&&segment[0].headY<food.foodY+5)&&
+		(segment[0].headX>food.foodX-5&&segment[0].headY>food.foodY-5)){
+			place=false;                           //重复执行导致浏览器崩溃,因为重新定位food的计算比interval函数慢
+			segment[0].size+=1;
+		}
+		else
+			return;
+	}
+
+	function initGame(){
+		clear=setInterval(drawScreen,10);			
+	}
+
+	function drawScreen(){
+		//ensure if the snake eat the food
+		eat();
+
+		//ensure if the game over
+		gameOver();
+
+		//ensure if occur colliding
+		collide();
+	
+		//background
+		context.fillStyle="#ffffaa";
+		context.fillRect(0,0,500,300);
+
+		//border
+		context.strokeStyle="#000080";
+		context.lineWidth=5;
+		context.strokeRect(5,5,490,290);
+
+		//snake
+		context.strokeStyle="black";
+		context.lineWidth=5;
+		context.lineCap='square';
+		context.beginPath();
+		context.moveTo(segment[0].headX,segment[0].headY);
+		context.lineTo(segment[0].tailX,segment[0].tailY);
+		for(var i=1;i<segment.length;i++){
+				context.lineTo(segment[i].tailX,segment[i].tailY);
+		}
+		context.stroke();
+		context.closePath();
+			switch(segment[0].direction){
+				case 'up':
+					if(segment.length==1){
+						segment[0].headY-=speed;
+						segment[0].tailY-=speed;
+					}
+					else{
+						segment[0].headY-=speed;
+						if(Math.abs(segment[0].headY-segment[0].tailY)==segment[0].size){
+							segment[0].tailY-=speed;
+						}
+					}
+									
+				break;
+
+				case 'down':
+					if(segment.length==1){
+						segment[0].headY+=speed;
+						segment[0].tailY+=speed;
+					}
+					else{//console.log(Math.abs(segment[i].headY-segment[i].tailY));console.log(segment[i].size);
+						segment[0].headY+=speed;
+						if(Math.abs(segment[0].headY-segment[0].tailY)==segment[0].size){
+							segment[0].tailY+=speed;
+						}
+					}
+
+					break;
+
+				case 'left':
+					if(segment.length==1){
+						segment[0].headX-=speed;
+						segment[0].tailX-=speed;
+					}
+					else{
+						segment[0].headX-=speed;
+						if(Math.abs(segment[0].headX-segment[0].tailX)==segment[0].size){
+							segment[0].tailX-=speed;
+						}
+					}
+
+						break;
+
+				case 'right':
+					if(segment.length==1){
+						segment[0].headX+=speed;
+						segment[0].tailX+=speed;
+					}
+					else{
+						segment[0].headX+=speed;
+						if(Math.abs(segment[0].headX-segment[0].tailX)==segment[0].size){
+							segment[0].tailX+=speed;
+						}
+					}		
+						break;
+
+					default:
+						break;
+			}
+				if(segment.length>1){   //让每一段刚好在到达下一段的尾巴是刚好pop出来
+					switch(segment[segment.length-1].direction){
+						case 'up':
+							if(Math.abs(segment[segment.length-1].headY-segment[segment.length-1].tailY)>1){
+								segment[segment.length-1].tailY-=speed;
+							}
+							else
+								segment.pop();
+						break;
+
+						case'down':
+							if(Math.abs(segment[segment.length-1].headY-segment[segment.length-1].tailY)>1){
+								segment[segment.length-1].tailY+=speed;
+							}
+							else 
+								segment.pop();
+							break;
+
+						case'left':
+							if(Math.abs(segment[segment.length-1].headX-segment[segment.length-1].tailX)>1){
+								segment[segment.length-1].tailX-=speed;
+							}
+							else 
+								segment.pop();
+							break;
+
+							case'right':
+							if(Math.abs(segment[segment.length-1].headX-segment[segment.length-1].tailX)>1){
+								segment[segment.length-1].tailX+=speed;
+							}
+							else 
+								segment.pop();
+							break;
+
+						default:
+							break;
+					}
+				}
+
+		//food
+	assign:while(!place){
+		food.foodX=parseInt(Math.random()*475+10);
+		food.foodY=parseInt(Math.random()*275+10);
+		for(var i=0;i<segment.length;i++){
+			if(((food.foodY==segment[i].headY)&&(food.foodX<segment[i].headX&&food.foodX>segment[i].tailX))||
+			((food.foodX==segment[i].headX)&&(food.foodY<segment[i].tailY&&food.foodY>segment[i].headY))){
+				  	continue assign;
+			}
+			else{
+				if(i==segment.length-1){
+					place=true;
+				}
+				else
+					continue;
+			}
+		}
+	 }
+		context.strokeStyle="black";
+		context.lineWidth=4;
+		context.lineCap='square';
+		context.beginPath();
+		context.moveTo(food.foodX,food.foodY);
+		context.lineTo(food.foodX+1,food.foodY);
+		context.stroke();
+		context.closePath();
+	
+
+	}
+}
+
+</script>
+</head>
+<body>
+<canvas id="canvas" width="500" height="300">
+	Your browser does not support HTML5 Canvas.
+</canvas>
+
+<form>
+	<label>Speed:</label>
+	<select id="speedSelect">
+		<option value="1">1</option>
+		<option value="2">2</option>
+		<option value="3">3</option>
+		<option value="4">4</option>
+		<option value="5">5</option>
+	</select>
+	<input type="button" value="begin" id="begin"/>
+	<input type="button" value="pause" id="pause"/>
+</form>
+</body>
+</html>
+
+
+					
