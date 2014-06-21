@@ -22,7 +22,7 @@ function eventWindowLoaded(){
 }
 
 function canvasSupport(){
-	return true//!!document.createElement('testCanvas').getContext;
+	return true;
 }
 
 function canvasApp(){
@@ -76,7 +76,7 @@ function canvasApp(){
 			return;
 		}
 
-	function collide(){
+	function collide(){                                               //检测蛇是否与自身发生碰撞
 		if(segment.length>3){
 			for(var i=3;i<segment.length;i++){
 				if(((segment[0].headY==segment[i].headY)&&(segment[0].headX<segment[i].headX&&segment[0].headX>segment[i].tailX))				||((segment[0].headX==segment[i].headX)&&(segment[0].headY<segment[i].tailY&&segment[0].headY>segment[i].headY))){
@@ -150,7 +150,7 @@ function canvasApp(){
 	function eat(){
 		if((segment[0].headX<food.foodX+5&&segment[0].headY<food.foodY+5)&&
 		(segment[0].headX>food.foodX-5&&segment[0].headY>food.foodY-5)){
-			place=false;                           //重复执行导致浏览器崩溃,因为重新定位food的计算比interval函数慢
+			place=false;                           
 			segment[0].size+=1;
 		}
 		else
@@ -251,7 +251,7 @@ function canvasApp(){
 					default:
 						break;
 			}
-				if(segment.length>1){   //让每一段刚好在到达下一段的尾巴是刚好pop出来
+				if(segment.length>1){                         //让每一段刚好在到达下一段的尾巴时刚好pop出来
 					switch(segment[segment.length-1].direction){
 						case 'up':
 							if(Math.abs(segment[segment.length-1].headY-segment[segment.length-1].tailY)>1){
